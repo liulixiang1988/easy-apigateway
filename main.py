@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-import logging
 
-from fastapi import FastAPI
+from flask import Flask
 
-from routers import proxy
+from blueprint import proxy
 
-logging.basicConfig(level=logging.INFO)
+app = Flask(__name__)
 
-app = FastAPI()
+app.register_blueprint(proxy.proxyApp)
 
-app.include_router(proxy.proxy_router)
+if __name__ == '__main__':
+    app.run(debug=True)
