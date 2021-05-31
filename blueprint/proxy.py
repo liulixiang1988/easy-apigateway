@@ -7,6 +7,7 @@ from flask import Blueprint, Response
 from flask import request
 
 import settings
+from middlewares.middlewares import check_signature, get_route, check_request_limit, record_request
 from proxy import request_mapping
 
 
@@ -26,7 +27,7 @@ proxyApp = Blueprint('proxy', __name__)
 def capture_routes(path_name):
     logging.info("url: %s, method: %s", request.url, request.method)
     # 1. 根据请求获取后端信息
-    backend = request_mapping.request_url(request.method, path_name)
+    backend = request_mapping.request_url(request.method, request.path)
     if backend is None:
         return 'not found', 404
     # 2. 转发请求到后端，注意host取的逻辑可以进行优化，实现负载均衡
@@ -35,3 +36,9 @@ def capture_routes(path_name):
     # 3. 对响应进行处理
     response = _get_response(result)
     return response
+
+
+proxyApp.before_request(check_signature)
+proxyApp.before_request(get_route)
+proxyApp.before_request(check_request_limit)
+proxyApp.after_request(record_request)
